@@ -2,6 +2,7 @@ const express = require('express')
 const http = require('http');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
+const options = require('generator-nest-js-boilerplate/generators/app/options');
 
 require('dotenv').config()
 
@@ -100,8 +101,26 @@ async function run() {
             const result = await cartProductsCollections.deleteOne(filter);
             res.send(result);
         })
-
-        app.delete('/cart/:customersEmail', async (req, res) => {
+        app.put('/cart/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedObject = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    name: updatedObject.name,
+                    price: updatedObject.price,
+                    category: updatedObject.category,
+                    sub_category: updatedObject.sub_category,
+                    img: updatedObject.img,
+                    quantity:updatedObject.quantity,
+                    customersEmail: updatedObject.customersEmail
+                }
+            }
+            const result = await cartProductsCollections.updateOne(filter ,updatedDoc,options);
+            res.send(result);
+        })
+        app.delete('/cart2/:customersEmail', async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const result = await cartProductsCollections.deleteMany(query);
