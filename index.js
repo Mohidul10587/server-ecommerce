@@ -34,6 +34,15 @@ function verifyJWT(req, res, next) {
 }
 
 
+
+app.get('/', async (req, res) => {
+    res.send('This is first deployment in heroku')
+})
+
+
+
+
+
 async function run() {
     try {
         await client.connect()
@@ -221,9 +230,7 @@ async function run() {
 
 
 
-        app.get('/', async (req, res) => {
-            res.send('This is first deployment in heroku')
-        })
+      
 
 
         // Delete product from cart
