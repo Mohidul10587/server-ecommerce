@@ -8,7 +8,7 @@ const options = require('generator-nest-js-boilerplate/generators/app/options');
 require('dotenv').config()
 
 const app = express()
-const port = process.env.PORT || 5001
+const port = process.env.PORT || 5000
 
 app.use(cors())
 app.use(express.json())
@@ -35,9 +35,7 @@ function verifyJWT(req, res, next) {
 
 
 
-app.get('/', async (req, res) => {
-    res.send('This is first deployment in heroku')
-})
+
 
 
 
@@ -313,6 +311,12 @@ async function run() {
 
 
 run().catch(console.dir)
+
+
+
+app.get('/', async (req, res) => {
+    res.send('This is first deployment in heroku')
+})
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
