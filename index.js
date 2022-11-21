@@ -113,14 +113,14 @@ async function run() {
 
         app.get('/products', async (req, res) => {
 
-            
+
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             const query = {};
             const cursor = productCollection.find(query);
             let products;
             if (page || size) {
-                products = await cursor.skip(page*size).limit(size).toArray();
+                products = await cursor.skip(page * size).limit(size).toArray();
             } else {
                 products = await cursor.toArray();
             }
@@ -139,15 +139,15 @@ async function run() {
 
 
         app.get('/products/:categoryName', async (req, res) => {
-              
+
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             const categoryName = req.query.categoryName
-            const query = {category:categoryName};
+            const query = { category: categoryName };
             const cursor = productCollection.find(query);
             let products;
             if (page || size) {
-                products = await cursor.skip(page*size).limit(size).toArray();
+                products = await cursor.skip(page * size).limit(size).toArray();
             } else {
                 products = await cursor.toArray();
             }
@@ -160,7 +160,7 @@ async function run() {
             const query = { category: categoryName };
             const cursor = productCollection.find(query);
             const products = await cursor.toArray();
-            const count= products.length
+            const count = products.length
             res.send({ count })
         })
 
@@ -178,7 +178,7 @@ async function run() {
             const query = { sub_category: categoryName };
             const cursor = productCollection.find(query);
             const products = await cursor.toArray();
-            const count= products.length
+            const count = products.length
             res.send({ count })
         })
 
@@ -221,14 +221,14 @@ async function run() {
             const query = { customersEmail: customersEmail };
             const cursor = cartProductsCollections.find(query);
             const products = await cursor.toArray();
-            const count= products.length
+            const count = products.length
             res.send({ count })
         })
 
 
 
 
-      
+
 
 
         // Delete product from cart
