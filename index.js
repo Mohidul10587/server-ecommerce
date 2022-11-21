@@ -1,4 +1,5 @@
 const express = require('express')
+const jwt = require('jsonwebtoken')
 const http = require('http');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
@@ -15,6 +16,23 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tw36kgy.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// verify token
+
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: "Unauthorized access" })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_VAR, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ massage: 'forbidden' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
+
 
 async function run() {
     try {
@@ -23,39 +41,140 @@ async function run() {
         const productCollection = client.db('shop').collection('products');
         const cartProductsCollections = client.db('shop').collection('cart');
         const orderedVoucherCollections = client.db('shop').collection('customer_addresses');
+        const usersCollection = client.db('shop').collection('users');
 
+
+
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email
+            const requesterAccount = await usersCollection.findOne({ email: requester })
+
+            if (requesterAccount.roll === 'admin') {
+                next()
+            } else {
+                res.status(403).send({ massage: 'Forbidden' })
+            }
+        }
+
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+
+                $set: user
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc, options)
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_VAR, { expiresIn: '1h' })
+            res.send({ result, token })
+
+        })
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { roll: 'admin' }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result)
+
+        })
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email
+            const user = await usersCollection.findOne({ email: email });
+            const isAdmin = user.roll === 'admin'
+            res.send({ admin: isAdmin })
+        })
+
+        app.get('/user', verifyJWT, verifyAdmin, async (req, res) => {
+            const users = await usersCollection.find().toArray()
+            res.send(users)
+        })
 
 
 
         // Product related api 
-        app.post('/product', async (req, res) => {
+        app.post('/product', verifyJWT, verifyAdmin, async (req, res) => {
             const product = req.body;
             const result = productCollection.insertOne(product);
             res.send(result)
         })
+
+
         app.get('/products', async (req, res) => {
+
+            
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
             const query = {};
             const cursor = productCollection.find(query);
-            const products = await cursor.toArray();
+            let products;
+            if (page || size) {
+                products = await cursor.skip(page*size).limit(size).toArray();
+            } else {
+                products = await cursor.toArray();
+            }
+
+
             res.send(products)
         })
+
+
+
+        app.get('/productsCount', async (req, res) => {
+            const count = await productCollection.estimatedDocumentCount();
+            res.send({ count })
+        })
+
+
+
         app.get('/products/:categoryName', async (req, res) => {
+              
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            const categoryName = req.query.categoryName
+            const query = {category:categoryName};
+            const cursor = productCollection.find(query);
+            let products;
+            if (page || size) {
+                products = await cursor.skip(page*size).limit(size).toArray();
+            } else {
+                products = await cursor.toArray();
+            }
+            res.send(products)
+        })
+
+
+        app.get('/productsCount/:categoryName', async (req, res) => {
             const categoryName = req.params.categoryName;
             const query = { category: categoryName };
             const cursor = productCollection.find(query);
             const products = await cursor.toArray();
-            res.send(products);
+            const count= products.length
+            res.send({ count })
         })
+
         app.get('/pro/:subCategoryName', async (req, res) => {
             const subCategoryName = req.params.subCategoryName;
 
             const query = { sub_category: subCategoryName };
             const cur = productCollection.find(query);
             const pro = await cur.toArray();
-
-
             res.send(pro);
         })
+
+        app.get('/proCount/:subCategoryName', async (req, res) => {
+            const categoryName = req.params.subCategoryName;
+            const query = { sub_category: categoryName };
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            const count= products.length
+            res.send({ count })
+        })
+
 
         app.get('/product/:productId', async (req, res) => {
             const productId = req.params.productId;
@@ -88,6 +207,20 @@ async function run() {
             const products = await cursor.toArray();
             res.send(products)
         })
+
+
+        app.get('/cartProductsCount/:customersEmail', async (req, res) => {
+            const customersEmail = req.params.customersEmail;
+            const query = { customersEmail: customersEmail };
+            const cursor = cartProductsCollections.find(query);
+            const products = await cursor.toArray();
+            const count= products.length
+            res.send({ count })
+        })
+
+
+
+
         app.get('/', async (req, res) => {
             res.send('This is first deployment in heroku')
         })
@@ -113,11 +246,11 @@ async function run() {
                     category: updatedObject.category,
                     sub_category: updatedObject.sub_category,
                     img: updatedObject.img,
-                    quantity:updatedObject.quantity,
+                    quantity: updatedObject.quantity,
                     customersEmail: updatedObject.customersEmail
                 }
             }
-            const result = await cartProductsCollections.updateOne(filter ,updatedDoc,options);
+            const result = await cartProductsCollections.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
         app.delete('/cart2/:customersEmail', async (req, res) => {
@@ -140,20 +273,30 @@ async function run() {
         })
 
 
-        app.get('/orderedVoucher', async (req, res) => {
+        app.get('/orderedVoucher', verifyJWT, async (req, res) => {
             const query = {};
             const cursor = orderedVoucherCollections.find(query);
             const orderedVoucher = await cursor.toArray();
             res.send(orderedVoucher)
         })
 
-        app.get('/orderedVoucher/:customersEmail', async (req, res) => {
+        app.get('/orderedVoucher/:customersEmail', verifyJWT, async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const cursor = orderedVoucherCollections.find(query);
             const orderedVoucher = await cursor.toArray();
             res.send(orderedVoucher)
         })
+
+        app.delete('/orderedVoucher/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await orderedVoucherCollections.deleteOne(filter);
+            res.send(result);
+        })
+
+
+
 
     } finally {
 
