@@ -2,7 +2,7 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
-const options = require('generator-nest-js-boilerplate/generators/app/options');
+
 
 require('dotenv').config()
 
