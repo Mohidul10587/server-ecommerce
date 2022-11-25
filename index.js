@@ -220,11 +220,9 @@ async function run() {
             const query = { customersEmail: customersEmail };
             const cursor = cartProductsCollections.find(query);
             const products = await cursor.toArray();
-let count = 0;
-for(let i=0 ; i< products.length ; i++){
+let count = products.length
 
-count = count + parseInt(products[i].quantity) 
-}
+
             
             res.send({ count })
         })
