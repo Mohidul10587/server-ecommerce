@@ -215,14 +215,19 @@ async function run() {
         })
 
 
-        app.get('/cartProductsCount/:customersEmail', async (req, res) => {
+            app.get('/cartProductsCount/:customersEmail', async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const cursor = cartProductsCollections.find(query);
             const products = await cursor.toArray();
-            res.send({ count:products.length })
-        })
 
+            let totalCartProduct = 0;
+            for (let i = 0; i < products.length; i++) {
+                totalCartProduct = totalCartProduct + products[i].quantity;
+            }
+
+            res.send({ count:totalCartProduct })
+        })
 
 
 
