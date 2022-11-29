@@ -42,8 +42,6 @@ async function run() {
         const productCollection = client.db('shop').collection('products');
         const cartProductsCollections = client.db('shop').collection('cart');
         const orderedVoucherCollections = client.db('shop').collection('customer_addresses');
-        const orderedVoucherCollectionsForAdmin = client.db('shop').collection('orders_for_admin');
-
         const usersCollection = client.db('shop').collection('users');
 
 
@@ -284,17 +282,11 @@ async function run() {
 
 
         // Customer's address collection
-        
+
 
         app.post('/orderedVoucher', async (req, res) => {
             const orderedVoucher = req.body;
             const result = orderedVoucherCollections.insertOne(orderedVoucher);
-            res.send(result)
-
-        })
-        app.post('/orderedVoucherForAdmin', async (req, res) => {
-            const orderedVoucher = req.body;
-            const result = orderedVoucherCollectionsForAdmin.insertOne(orderedVoucher);
             res.send(result)
 
         })
@@ -307,7 +299,7 @@ async function run() {
             res.send(orderedVoucher)
         })
 
-        app.get('/orderedVoucherForAdmin/:customersEmail', verifyJWT,verifyAdmin, async (req, res) => {
+        app.get('/orderedVoucher/:customersEmail', verifyJWT, async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const cursor = orderedVoucherCollections.find(query);
