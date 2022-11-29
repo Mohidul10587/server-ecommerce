@@ -291,7 +291,7 @@ async function run() {
         })
         app.post('/orderedVoucherForAdmin', async (req, res) => {
             const orderedVoucher = req.body;
-            const result = orderedVoucherCollections.insertOne(orderedVoucher);
+            const result = orderedVoucherForAdmin.insertOne(orderedVoucher);
             res.send(result)
 
         })
@@ -306,7 +306,7 @@ async function run() {
 
         app.get('/orderedVoucherForAdmin', verifyJWT, async (req, res) => {
             const query = {};
-            const cursor = orderedVoucherCollections.find(query);
+            const cursor = orderedVoucherForAdmin.find(query);
             const orderedVoucher = await cursor.toArray();
             res.send(orderedVoucher)
         })
