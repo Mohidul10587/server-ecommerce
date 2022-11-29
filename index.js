@@ -42,6 +42,8 @@ async function run() {
         const productCollection = client.db('shop').collection('products');
         const cartProductsCollections = client.db('shop').collection('cart');
         const orderedVoucherCollections = client.db('shop').collection('customer_addresses');
+        const orderedVoucherForAdmin = client.db('shop').collection('orderedVoucherForAdmin');
+
         const usersCollection = client.db('shop').collection('users');
 
 
@@ -207,8 +209,6 @@ async function run() {
         })
 
 
-        // count of  a customers cart product
-
         app.get('/cartProductsCount/:customersEmail', async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
@@ -222,7 +222,6 @@ async function run() {
 
             res.send({ count:totalCartProduct })
         })
-
 
 
 
@@ -290,14 +289,28 @@ async function run() {
             res.send(result)
 
         })
+        app.post('/orderedVoucherForAdmin', async (req, res) => {
+            const orderedVoucher = req.body;
+            const result = orderedVoucherCollections.insertOne(orderedVoucher);
+            res.send(result)
+
+        })
 
 
-        app.get('/orderedVoucher', verifyJWT, async (req, res) => {
+        // app.get('/orderedVoucher', verifyJWT, async (req, res) => {
+        //     const query = {};
+        //     const cursor = orderedVoucherCollections.find(query);
+        //     const orderedVoucher = await cursor.toArray();
+        //     res.send(orderedVoucher)
+        // })
+
+        app.get('/orderedVoucherForAdmin', verifyJWT, async (req, res) => {
             const query = {};
-            const cursor = orderedVoucherCollections.find(query);
+            const cursor = orderedVoucherForAdmin.find(query);
             const orderedVoucher = await cursor.toArray();
             res.send(orderedVoucher)
         })
+
 
         app.get('/orderedVoucher/:customersEmail', verifyJWT, async (req, res) => {
             const customersEmail = req.params.customersEmail;
@@ -307,10 +320,10 @@ async function run() {
             res.send(orderedVoucher)
         })
 
-        app.delete('/orderedVoucher/:id', async (req, res) => {
+        app.delete('/orderedVoucherForAdmin/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
-            const result = await orderedVoucherCollections.deleteOne(filter);
+            const result = await orderedVoucherForAdmin.deleteOne(filter);
             res.send(result);
         })
 
@@ -335,3 +348,11 @@ app.get('/', async (req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+
+
+
+
+
+
+
+
