@@ -306,7 +306,7 @@ async function run() {
 
         app.get('/orderedVoucherForAdmin', verifyJWT, async (req, res) => {
             const query = {};
-            const cursor = orderedVoucherForAdmin.find(query);
+            const cursor = orderedVoucherCollections.find(query);
             const orderedVoucher = await cursor.toArray();
             res.send(orderedVoucher)
         })
