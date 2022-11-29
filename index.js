@@ -35,11 +35,6 @@ function verifyJWT(req, res, next) {
 
 
 
-
-
-
-
-
 async function run() {
     try {
         await client.connect()
@@ -47,6 +42,8 @@ async function run() {
         const productCollection = client.db('shop').collection('products');
         const cartProductsCollections = client.db('shop').collection('cart');
         const orderedVoucherCollections = client.db('shop').collection('customer_addresses');
+        const orderedVoucherCollectionsForAdmin = client.db('shop').collection('orders_for_admin');
+
         const usersCollection = client.db('shop').collection('users');
 
 
@@ -117,15 +114,11 @@ async function run() {
             const size = parseInt(req.query.size);
             const query = {};
             const cursor = productCollection.find(query);
-            let products;
-            if (page || size) {
-                products = await cursor.skip(page * size).limit(size).toArray();
-            } else {
-                products = await cursor.toArray();
-            }
 
 
-            res.send(products)
+            products = await cursor.toArray();
+
+            res.send({ count })
         })
 
 
@@ -137,12 +130,13 @@ async function run() {
 
 
 
-        app.get('/products/:categoryName', async (req, res) => {
-
+        app.get('/products/new', async (req, res) => {
+           
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             const categoryName = req.query.categoryName
             const query = { category: categoryName };
+            
             const cursor = productCollection.find(query);
             let products;
             if (page || size) {
@@ -215,13 +209,20 @@ async function run() {
         })
 
 
+        // count of  a customers cart product
+
         app.get('/cartProductsCount/:customersEmail', async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const cursor = cartProductsCollections.find(query);
             const products = await cursor.toArray();
-            const count = products.length
-            res.send({ count })
+
+            let totalCartProduct = 0;
+            for (let i = 0; i < products.length; i++) {
+                totalCartProduct = totalCartProduct + products[i].quantity;
+            }
+
+            res.send({ count:totalCartProduct })
         })
 
 
@@ -238,6 +239,12 @@ async function run() {
             const result = await cartProductsCollections.deleteOne(filter);
             res.send(result);
         })
+
+
+
+        // update quantity of a product
+
+
         app.put('/cart/:id', async (req, res) => {
             const id = req.params.id;
             const updatedObject = req.body;
@@ -254,9 +261,19 @@ async function run() {
                     customersEmail: updatedObject.customersEmail
                 }
             }
+
+
+
+
+
+
+
             const result = await cartProductsCollections.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
+
+        //  delete all cart product of a user
+
         app.delete('/cart2/:customersEmail', async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
@@ -267,11 +284,17 @@ async function run() {
 
 
         // Customer's address collection
-
+        
 
         app.post('/orderedVoucher', async (req, res) => {
             const orderedVoucher = req.body;
             const result = orderedVoucherCollections.insertOne(orderedVoucher);
+            res.send(result)
+
+        })
+        app.post('/orderedVoucherForAdmin', async (req, res) => {
+            const orderedVoucher = req.body;
+            const result = orderedVoucherCollectionsForAdmin.insertOne(orderedVoucher);
             res.send(result)
 
         })
@@ -284,7 +307,7 @@ async function run() {
             res.send(orderedVoucher)
         })
 
-        app.get('/orderedVoucher/:customersEmail', verifyJWT, async (req, res) => {
+        app.get('/orderedVoucherForAdmin/:customersEmail', verifyJWT,verifyAdmin, async (req, res) => {
             const customersEmail = req.params.customersEmail;
             const query = { customersEmail: customersEmail };
             const cursor = orderedVoucherCollections.find(query);
