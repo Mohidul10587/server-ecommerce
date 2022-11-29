@@ -70,7 +70,7 @@ async function run() {
                 $set: user
             }
             const result = await usersCollection.updateOne(filter, updateDoc, options)
-            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_VAR, { expiresIn: '1h' })
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_VAR, { expiresIn: '365d' })
             res.send({ result, token })
 
         })
@@ -131,12 +131,12 @@ async function run() {
 
 
         app.get('/products/new', async (req, res) => {
-           
+
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             const categoryName = req.query.categoryName
             const query = { category: categoryName };
-            
+
             const cursor = productCollection.find(query);
             let products;
             if (page || size) {
@@ -220,7 +220,7 @@ async function run() {
                 totalCartProduct = totalCartProduct + products[i].quantity;
             }
 
-            res.send({ count:totalCartProduct })
+            res.send({ count: totalCartProduct })
         })
 
 
