@@ -115,7 +115,7 @@ async function run() {
             selectedProduct = []
             for (let i = 0; i < products.length; i++) {
                 
-                if (products[i].name.include(productName)) {
+                if (products[i].name.includes(productName)) {
                     selectedProduct.push(products[i])
                 }
 
