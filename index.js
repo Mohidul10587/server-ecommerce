@@ -118,7 +118,7 @@ async function run() {
 
             products = await cursor.toArray();
 
-            res.send({ count })
+            res.send(products)
         })
 
 
