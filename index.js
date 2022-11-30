@@ -107,18 +107,20 @@ async function run() {
         })
 
 
-        app.get('/products', async (req, res) => {
-
-
-            const page = parseInt(req.query.page);
-            const size = parseInt(req.query.size);
+        app.get('/products/:productName', async (req, res) => {
+            const productName = req.params.productName;
             const query = {};
             const cursor = productCollection.find(query);
-
-
             products = await cursor.toArray();
+            selectedProduct = []
+            for (let i = 0; i < products.length; i++) {
+                
+                if (products[i].name.include(productName)) {
+                    selectedProduct.push(products[i])
+                }
 
-            res.send({ count })
+            }
+            res.send(selectedProduct)
         })
 
 
