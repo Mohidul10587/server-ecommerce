@@ -107,6 +107,22 @@ async function run() {
         })
 
 
+        app.get('/products', async (req, res) => {
+
+
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            const query = {};
+            const cursor = productCollection.find(query);
+
+
+            products = await cursor.toArray();
+
+            res.send({ count })
+        })
+
+
+
         app.get('/products/:productName', async (req, res) => {
             const productName = req.params.productName;
             const query = {};
@@ -122,6 +138,10 @@ async function run() {
             }
             res.send(selectedProduct)
         })
+
+
+
+
 
 
 
