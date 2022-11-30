@@ -116,7 +116,9 @@ async function run() {
             products = await cursor.toArray();
             selectedProduct = []
             for (let i = 0; i < products.length; i++) {
-                
+                if (productName === 'All') {
+                   return res.send(products)
+                }
                 if (products[i].name.includes(productName)) {
                     selectedProduct.push(products[i])
                 }
