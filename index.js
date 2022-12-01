@@ -119,7 +119,8 @@ async function run() {
                 if (productName === 'All') {
                    return res.send(products)
                 }
-                if (products[i].name.includes(productName)) {
+
+                if (products[i].name.toLowerCase().includes(productName.toLowerCase())) {
                     selectedProduct.push(products[i])
                 }
 
