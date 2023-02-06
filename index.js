@@ -98,6 +98,12 @@ async function run() {
         })
 
 
+        app.delete('/deleteUser/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
+        })
 
         // Product related api 
         app.post('/product', verifyJWT, verifyAdmin, async (req, res) => {
@@ -105,9 +111,6 @@ async function run() {
             const result = productCollection.insertOne(product);
             res.send(result)
         })
-
-
-
 
         app.get('/productsName/:productName', async (req, res) => {
             const productName = req.params.productName;
@@ -117,7 +120,7 @@ async function run() {
             selectedProduct = []
             for (let i = 0; i < products.length; i++) {
                 if (productName === 'All') {
-                   return res.send(products)
+                   return res.send(z)
                 }
 
                 if (products[i].name.toLowerCase().includes(productName.toLowerCase())) {
@@ -127,9 +130,6 @@ async function run() {
             }
             res.send(selectedProduct)
         })
-
-
-
 
         app.get('/productsCount', async (req, res) => {
             const count = await productCollection.estimatedDocumentCount();
